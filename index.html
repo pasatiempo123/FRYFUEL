@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FRY FUEL | Crispy fries, fast</title>
+  <meta name="description" content="FRY FUEL serves hot, crispy French fries with bold flavors. Build your box and order for pickup or delivery.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- PyScript -->
+  <link rel="stylesheet" href="https://pyscript.net/releases/2025.8.1/core.css">
+  <script type="module" src="https://pyscript.net/releases/2025.8.1/core.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="logo" href="#top">FRY<span>FUEL</span></a>
+    <nav>
+      <a href="#menu">Menu</a>
+      <a href="#how">How it works</a>
+      <a href="#order" class="cart-pill">Your box <b id="cart-count">0</b></a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-text">
+        <p id="open-status" class="status">Checking hours...</p>
+        <h1>Fries that fuel<br>your whole day.</h1>
+        <p class="lead">Hand-cut potatoes, fried twice, tossed in bold seasonings and piled into a box that stays hot until the last bite.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#menu">See the menu</a>
+          <a class="btn ghost" href="#order">Go to your box</a>
+        </div>
+      </div>
+      <div class="carton-wrap" aria-hidden="true">
+        <div class="fry" style="--x:14%;--h:150px;--r:-9deg"></div>
+        <div class="fry" style="--x:26%;--h:185px;--r:-4deg"></div>
+        <div class="fry" style="--x:38%;--h:165px;--r:3deg"></div>
+        <div class="fry" style="--x:50%;--h:200px;--r:-1deg"></div>
+        <div class="fry" style="--x:62%;--h:170px;--r:6deg"></div>
+        <div class="fry" style="--x:74%;--h:190px;--r:10deg"></div>
+        <div class="carton"><span>FRY<br>FUEL</span></div>
+      </div>
+    </section>
+
+    <!-- MENU -->
+    <section id="menu" class="section">
+      <h2>Pick your fuel</h2>
+      <p class="sub">Tap a category or search by name or flavor.</p>
+      <div class="controls">
+        <div class="chips">
+          <button class="chip active" data-cat="All">All</button>
+          <button class="chip" data-cat="Classics">Classics</button>
+          <button class="chip" data-cat="Loaded">Loaded</button>
+          <button class="chip" data-cat="Drinks">Drinks</button>
+        </div>
+        <input id="search" type="search" placeholder="Search: cheese, spicy, garlic" aria-label="Search the menu">
+      </div>
+      <div id="menu-grid" class="grid"><p class="empty">Heating the oil...</p></div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="section alt">
+      <h2>How ordering works</h2>
+      <ol class="steps">
+        <li><b>Build your box.</b> Add fries and drinks from the menu.</li>
+        <li><b>Choose pickup or delivery.</b> Add a promo code if you have one.</li>
+        <li><b>Place your order.</b> We fry it fresh and call your name.</li>
+      </ol>
+    </section>
+
+    <!-- ORDER -->
+    <section id="order" class="section">
+      <h2>Your box</h2>
+      <div class="order-layout">
+        <div class="panel">
+          <div id="cart-items"></div>
+
+          <div class="promo">
+            <input id="promo" type="text" placeholder="Promo code" aria-label="Promo code">
+            <button id="apply-promo" class="btn small" type="button">Apply code</button>
+          </div>
+          <p id="promo-msg" class="note"></p>
+
+          <label class="field">Order type
+            <select id="order-mode">
+              <option value="Pickup">Pickup</option>
+              <option value="Delivery">Delivery</option>
+            </select>
+          </label>
+
+          <dl class="totals">
+            <div><dt>Subtotal</dt><dd id="t-sub">0</dd></div>
+            <div id="row-discount" hidden><dt>Discount</dt><dd id="t-disc">0</dd></div>
+            <div id="row-fee" hidden><dt>Delivery fee</dt><dd id="t-fee">0</dd></div>
+            <div class="grand"><dt>Total</dt><dd id="t-total">0</dd></div>
+          </dl>
+          <button id="clear-cart" class="btn ghost small" type="button">Empty the box</button>
+        </div>
+
+        <div class="panel">
+          <form id="checkout-form" novalidate>
+            <h3>Your details</h3>
+            <label class="field">Name
+              <input id="cust-name" type="text" autocomplete="name" placeholder="Juan Dela Cruz">
+            </label>
+            <label class="field">Mobile number
+              <input id="cust-phone" type="tel" autocomplete="tel" placeholder="09XX XXX XXXX">
+            </label>
+            <label class="field" id="address-field" hidden>Delivery address
+              <input id="cust-address" type="text" autocomplete="street-address" placeholder="House no., street, barangay">
+            </label>
+            <p id="form-error" class="error" role="alert"></p>
+            <button class="btn primary wide" type="submit">Place order</button>
+          </form>
+
+          <div id="confirm" class="confirm" hidden>
+            <h3 id="confirm-title"></h3>
+            <p id="confirm-text"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <strong>FRY FUEL</strong>
+    <span>Open daily, 10:00 am to 10:00 pm</span>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Python (the "back end" logic) runs right in the browser -->
+  <script type="py" src="./main.py" config="./pyscript.toml"></script>
+</body>
+</html>
