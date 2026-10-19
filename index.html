@@ -15,6 +15,7 @@
   <script type="module" src="https://pyscript.net/releases/2025.8.1/core.js"></script>
 </head>
 <body>
+  <div class="promo-bar">New here? Use code <b>FIRSTBOX</b> for 15% off your order. Pickup is always free.</div>
   <header class="topbar">
     <a class="logo" href="#top">FRY<span>FUEL</span></a>
     <nav>
@@ -45,6 +46,95 @@
         <div class="fry" style="--x:74%;--h:190px;--r:10deg"></div>
         <div class="carton"><span>FRY<br>FUEL</span></div>
       </div>
+    </section>
+
+    <!-- ADS: photo slideshow (5 slides) -->
+    <section class="section featured" aria-label="Featured offers">
+      <div class="slider">
+        <article class="slide active">
+          <img src="images/promo.png" alt="A hot box of crispy FRY FUEL fries" onerror="this.style.display='none'">
+          <div class="slide-text">
+            <span class="ad-tag">New here?</span>
+            <h2>15% off your first box</h2>
+            <p>Use code <b>FIRSTBOX</b> at checkout. Pickup is always free.</p>
+            <a class="btn primary" href="#order">Start your box</a>
+          </div>
+        </article>
+        <article class="slide">
+          <img src="images/bacon.jpg" alt="Fuel Supreme loaded fries" onerror="this.style.display='none'">
+          <div class="slide-text">
+            <span class="ad-tag">Biggest box</span>
+            <h2>Fuel Supreme</h2>
+            <p>Cheese, bacon, chili, and a sunny egg on top of crispy fries.</p>
+            <a class="btn primary" href="#menu">See the menu</a>
+          </div>
+        </article>
+        <article class="slide">
+          <img src="images/cheese.jpg" alt="Cheese Blast fries" onerror="this.style.display='none'">
+          <div class="slide-text">
+            <span class="ad-tag">Code FUEL10</span>
+            <h2>10% off Cheese Blast</h2>
+            <p>Sharp cheddar on golden fries. Enter FUEL10 in Your box.</p>
+            <a class="btn primary" href="#order">Use the code</a>
+          </div>
+        </article>
+        <article class="slide">
+          <img src="images/jumbo.png" alt="A jumbo box of FRY FUEL fries" onerror="this.style.display='none'">
+          <div class="slide-text">
+            <span class="ad-tag">Hungry?</span>
+            <h2>Go Jumbo</h2>
+            <p>Pick Jumbo size and pile on cheese, bacon, or a sunny egg.</p>
+            <a class="btn primary" href="#menu">Build your box</a>
+          </div>
+        </article>
+        <article class="slide">
+          <img src="images/dilibiri.png" alt="FRY FUEL fries ready for pickup" onerror="this.style.display='none'">
+          <div class="slide-text">
+            <span class="ad-tag">Pickup is free</span>
+            <h2>Hot fries, fast</h2>
+            <p>Pick up for free, or get delivery for just ₱30.</p>
+            <a class="btn primary" href="#order">Order now</a>
+          </div>
+        </article>
+        <div class="dots">
+          <button class="dot active" data-i="0" aria-label="Show offer 1"></button>
+          <button class="dot" data-i="1" aria-label="Show offer 2"></button>
+          <button class="dot" data-i="2" aria-label="Show offer 3"></button>
+          <button class="dot" data-i="3" aria-label="Show offer 4"></button>
+          <button class="dot" data-i="4" aria-label="Show offer 5"></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADS: fan favorite cards -->
+    <section class="section photo-ads" aria-label="Fan favorites">
+      <article class="pad" style="--bg:url('images/oberlod.jpg')">
+        <span class="sticker">₱199</span>
+        <div class="pad-text">
+          <span class="ad-tag">Biggest box</span>
+          <h3>Fuel Supreme</h3>
+          <p>Our biggest box, loaded to the top.</p>
+          <a class="btn primary small" href="#menu">Order it</a>
+        </div>
+      </article>
+      <article class="pad" style="--bg:url('images/cheese.jpg')">
+        <span class="sticker">₱99</span>
+        <div class="pad-text">
+          <span class="ad-tag">Fan favorite</span>
+          <h3>Cheese Blast</h3>
+          <p>Messy fingers guaranteed.</p>
+          <a class="btn primary small" href="#menu">Order it</a>
+        </div>
+      </article>
+      <article class="pad" style="--bg:url('images/cajun.jpg')">
+        <span class="sticker">₱99</span>
+        <div class="pad-text">
+          <span class="ad-tag">Hot</span>
+          <h3>Spicy Cajun</h3>
+          <p>A slow, warm kick in every bite.</p>
+          <a class="btn primary small" href="#menu">Order it</a>
+        </div>
+      </article>
     </section>
 
     <!-- MENU -->
@@ -88,7 +178,7 @@
 
           <label class="field">Order type
             <select id="order-mode">
-              <option value="Pickup">Pickup</option>
+              <option value="Pickup">Pickup (free)</option>
               <option value="Delivery">Delivery</option>
             </select>
           </label>
@@ -125,6 +215,12 @@
         </div>
       </div>
     </section>
+    <!-- ADS: bottom banner -->
+    <section class="ad-banner" style="--bg:url('images/slide5.jpg')">
+      <h2>Hungry? We're open daily, 10 am to 10 pm.</h2>
+      <p>Free pickup. Delivery is just ₱30.</p>
+      <a class="btn primary" href="#order">Start your box</a>
+    </section>
   </main>
 
   <footer>
@@ -134,7 +230,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- Python (the "back end" logic) runs right in the browser -->
+ 
   <script type="py" src="./main.py" config="./pyscript.toml"></script>
 </body>
 </html>
