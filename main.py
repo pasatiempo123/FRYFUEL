@@ -7,15 +7,19 @@ PyScript calls the matching Python function.
 import random
 from datetime import datetime
 
-from js import setTimeout
+from js import setTimeout, setInterval, window
 from pyodide.ffi import create_proxy
 from pyscript import document, when
 
-from menu import MENU, PROMOS, DELIVERY_FEE, CURRENCY, OPEN_HOUR, CLOSE_HOUR
+from menu import (
+    MENU, PROMOS, DELIVERY_FEE, CURRENCY, OPEN_HOUR, CLOSE_HOUR, SIZES, ADDONS,
+)
 
 # ---------- Application state ----------
 ITEMS = {item["id"]: item for item in MENU}
-cart = {}  # item id -> quantity
+ADDON_BY_ID = {a["id"]: a for a in ADDONS}
+# cart: line key -> {"id": item id, "size": size name, "addons": [addon ids], "qty": int}
+cart = {}
 state = {"category": "All", "search": "", "promo": None, "mode": "Pickup"}
 
 
@@ -35,11 +39,82 @@ def toast(message):
     setTimeout(create_proxy(lambda: box.classList.remove("show")), 2200)
 
 
+def customizable(item):
+    """Food gets size and add-ons. Drinks do not."""
+    return item["category"] != "Drinks"
+
+
+def unit_price(item_id, size, addon_ids):
+    item = ITEMS[item_id]
+    price = item["price"]
+    if customizable(item):
+        price += SIZES[size]
+        price += sum(ADDON_BY_ID[a]["price"] for a in addon_ids)
+    return price
+
+
+def line_key(item_id, size, addon_ids):
+    return f"{item_id}|{size}|{','.join(sorted(addon_ids))}"
+
+
+def line_label(line):
+    item = ITEMS[line["id"]]
+    if not customizable(item):
+        return item["name"]
+    text = f"{item['name']} ({line['size']})"
+    if line["addons"]:
+        text += " + " + ", ".join(ADDON_BY_ID[a]["name"] for a in line["addons"])
+    return text
+
+
 def totals():
-    subtotal = sum(ITEMS[i]["price"] * q for i, q in cart.items())
+    subtotal = sum(
+        unit_price(l["id"], l["size"], l["addons"]) * l["qty"] for l in cart.values()
+    )
     discount = subtotal * PROMOS.get(state["promo"], 0)
     fee = DELIVERY_FEE if (state["mode"] == "Delivery" and cart) else 0
     return subtotal, discount, fee, subtotal - discount + fee
+
+
+def size_options():
+    out = ""
+    for name, extra in SIZES.items():
+        label = name if extra == 0 else f"{name} (+{CURRENCY}{extra})"
+        out += f'<option value="{name}">{label}</option>'
+    return out
+
+
+def addon_boxes():
+    return "".join(
+        f'<label class="addon"><input type="checkbox" value="{a["id"]}"> '
+        f'{a["name"]} <em>+{CURRENCY}{a["price"]}</em></label>'
+        for a in ADDONS
+    )
+
+
+def custom_html(item):
+    if not customizable(item):
+        return ""
+    return (
+        '<div class="custom">'
+        f'<label class="size-row">Size <select class="size">{size_options()}</select></label>'
+        f'<fieldset class="addons"><legend>Add-ons</legend>{addon_boxes()}</fieldset>'
+        "</div>"
+    )
+
+
+def read_choice(card):
+    """Read the size and add-ons currently selected on a menu card."""
+    item_id = card.dataset.id
+    size_box = card.querySelector(".size")
+    size = size_box.value if size_box else "Regular"
+    addons = sorted(box.value for box in card.querySelectorAll(".addon input:checked"))
+    return item_id, size, addons
+
+
+def refresh_card_price(card):
+    item_id, size, addons = read_choice(card)
+    card.querySelector(".price").textContent = money(unit_price(item_id, size, addons))
 
 
 # ---------- Rendering (dynamic page updates) ----------
@@ -54,15 +129,16 @@ def render_menu():
         el("menu-grid").innerHTML = '<p class="empty">No match. Try another word or pick All.</p>'
         return
     el("menu-grid").innerHTML = "".join(
-        f'''<article class="card">
+        f'''<article class="card" data-id="{m["id"]}">
               <div class="pic">{m["emoji"]}</div>
               <div class="body">
                 {f'<span class="tag">{m["tag"]}</span>' if m["tag"] else ''}
                 <h3>{m["name"]}</h3>
                 <p>{m["desc"]}</p>
+                {custom_html(m)}
                 <div class="row">
                   <span class="price">{money(m["price"])}</span>
-                  <button class="btn small add" data-id="{m["id"]}">Add to box</button>
+                  <button class="btn small add">Add to box</button>
                 </div>
               </div>
             </article>'''
@@ -71,24 +147,25 @@ def render_menu():
 
 
 def render_cart():
-    el("cart-count").textContent = str(sum(cart.values()))
+    el("cart-count").textContent = str(sum(l["qty"] for l in cart.values()))
 
     if not cart:
         el("cart-items").innerHTML = '<p class="empty">Your box is empty. Add something from the menu.</p>'
     else:
-        el("cart-items").innerHTML = "".join(
-            f'''<div class="line">
-                  <div><strong>{ITEMS[i]["emoji"]} {ITEMS[i]["name"]}</strong>
-                       <span>{money(ITEMS[i]["price"])} each</span></div>
+        rows = ""
+        for key, line in cart.items():
+            price = unit_price(line["id"], line["size"], line["addons"])
+            rows += f'''<div class="line">
+                  <div><strong>{ITEMS[line["id"]]["emoji"]} {line_label(line)}</strong>
+                       <span>{money(price)} each</span></div>
                   <div class="qty">
-                    <button data-act="dec" data-id="{i}" aria-label="Remove one">-</button>
-                    <b>{q}</b>
-                    <button data-act="inc" data-id="{i}" aria-label="Add one">+</button>
+                    <button data-act="dec" data-key="{key}" aria-label="Remove one">-</button>
+                    <b>{line["qty"]}</b>
+                    <button data-act="inc" data-key="{key}" aria-label="Add one">+</button>
                   </div>
-                  <div class="line-total">{money(ITEMS[i]["price"] * q)}</div>
+                  <div class="line-total">{money(price * line["qty"])}</div>
                 </div>'''
-            for i, q in cart.items()
-        )
+        el("cart-items").innerHTML = rows
 
     subtotal, discount, fee, total = totals()
     el("t-sub").textContent = money(subtotal)
@@ -113,13 +190,26 @@ def update_status():
 # ---------- EVENT HANDLERS ----------
 @when("click", "#menu-grid")
 def on_menu_click(event):
-    """Click event (delegated): any 'Add to box' button inside the menu."""
+    """Click event (delegated): 'Add to box' uses the size and add-ons chosen on that card."""
     button = event.target.closest(".add")
-    if button:
-        item_id = button.dataset.id
-        cart[item_id] = cart.get(item_id, 0) + 1
-        render_cart()
-        toast(f"{ITEMS[item_id]['name']} added")
+    if not button:
+        return
+    item_id, size, addons = read_choice(button.closest(".card"))
+    key = line_key(item_id, size, addons)
+    if key in cart:
+        cart[key]["qty"] += 1
+    else:
+        cart[key] = {"id": item_id, "size": size, "addons": addons, "qty": 1}
+    render_cart()
+    toast(f"{ITEMS[item_id]['name']} added")
+
+
+@when("change", "#menu-grid")
+def on_option_change(event):
+    """Change event (delegated): picking a size or add-on updates that card's price."""
+    card = event.target.closest(".card")
+    if card:
+        refresh_card_price(card)
 
 
 @when("click", ".chip")
@@ -144,13 +234,13 @@ def on_cart_click(event):
     button = event.target.closest("button")
     if not button:
         return
-    item_id, action = button.dataset.id, button.dataset.act
+    key, action = button.dataset.key, button.dataset.act
     if action == "inc":
-        cart[item_id] += 1
+        cart[key]["qty"] += 1
     elif action == "dec":
-        cart[item_id] -= 1
-        if cart[item_id] <= 0:
-            del cart[item_id]
+        cart[key]["qty"] -= 1
+        if cart[key]["qty"] <= 0:
+            del cart[key]
     render_cart()
 
 
@@ -208,7 +298,7 @@ def on_checkout(event):
         error.textContent = ""
         order_no = f"FF-{random.randint(1000, 9999)}"
         total = totals()[3]
-        count = sum(cart.values())
+        count = sum(l["qty"] for l in cart.values())
         el("confirm-title").textContent = f"Order {order_no} placed!"
         el("confirm-text").textContent = (
             f"Thanks, {name}. {count} item(s), total {money(total)}, for {state['mode'].lower()}. "
@@ -222,6 +312,31 @@ def on_checkout(event):
         el("checkout-form").reset()
         render_cart()
         toast("Order placed")
+
+
+# ---------- Ad slideshow ----------
+slides = document.querySelectorAll(".slide")
+dots = document.querySelectorAll(".dot")
+slide_state = {"i": 0}
+
+
+def show_slide(index):
+    slide_state["i"] = index % len(slides)
+    for n, slide in enumerate(slides):
+        slide.classList.toggle("active", n == slide_state["i"])
+    for n, dot in enumerate(dots):
+        dot.classList.toggle("active", n == slide_state["i"])
+
+
+@when("click", ".dot")
+def on_dot_click(event):
+    """Click event: jump to the chosen offer."""
+    show_slide(int(event.currentTarget.dataset.i))
+
+
+# Timer event: advance every 5 seconds (skipped if the visitor prefers reduced motion)
+if not window.matchMedia("(prefers-reduced-motion: reduce)").matches:
+    setInterval(create_proxy(lambda: show_slide(slide_state["i"] + 1)), 5000)
 
 
 # ---------- Start up ----------

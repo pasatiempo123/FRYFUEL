@@ -35,3 +35,20 @@ MENU = [
     {"id": "cola", "name": "Cola", "category": "Drinks", "price": 45, "emoji": "🥤",
      "desc": "Ice-cold, 16 oz cup.", "tag": ""},
 ]
+
+
+# Size choices: name -> extra price added to the base price (drinks have no size)
+SIZES = {
+    "Regular": 0,
+    "Large": 30,
+    "Jumbo": 60,
+}
+
+# Add-ons offered on every food item
+ADDONS = [
+    {"id": "cheese", "name": "Extra cheese", "price": 20},
+    {"id": "bacon", "name": "Bacon bits", "price": 30},
+    {"id": "garlic", "name": "Garlic dip", "price": 15},
+    {"id": "chili", "name": "Chili sauce", "price": 15},
+    {"id": "egg", "name": "Sunny egg", "price": 25},
+]
